@@ -1,7 +1,14 @@
+import 'dart:ui' as prefix0;
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mqtt/core/util_mqtt.dart';
+import 'package:flutter_custom_dialog/flutter_custom_dialog.dart';
+import 'package:mqtt/widgets/common_button.dart';
 import 'package:mqtt/widgets/common_textfiled.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/common_dialog.dart';
+import 'dart:ui';
 
 class SetInfoPage extends StatefulWidget {
   @override
@@ -9,24 +16,19 @@ class SetInfoPage extends StatefulWidget {
 }
 
 class _SetInfoPageState extends State<SetInfoPage> {
-
-   String _userName;
-   String _password;
-   String _ip;
-   String _id;
-
-
-
+  String _userName;
+  String _password;
+  String _ip;
+  String _id;
 
   TextEditingController userNameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController ipController = TextEditingController();
   TextEditingController idController = TextEditingController();
 
-
   Future readShared() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
-    
+
     _userName = preferences.get('userName');
     print('读取到_userName为:$_userName');
 
@@ -45,16 +47,13 @@ class _SetInfoPageState extends State<SetInfoPage> {
     super.initState();
     // 此函数时异步函数,所以直接执行了下面的赋值代码,并没有等待此函数完成赋值后再给textfiled赋值
     // 所以必须等待异步函数执行完毕后进行赋值,否则赋值全为null
-    readShared().whenComplete(
-      (){
-        userNameController.value = TextEditingValue(text: '$_userName');
-        passwordController.value = TextEditingValue(text: '$_password');
-        ipController.value = TextEditingValue(text: '$_ip');
-        idController.value = TextEditingValue(text: '$_id');
-      }
-    );
+    readShared().whenComplete(() {
+      userNameController.value = TextEditingValue(text: '$_userName');
+      passwordController.value = TextEditingValue(text: '$_password');
+      ipController.value = TextEditingValue(text: '$_ip');
+      idController.value = TextEditingValue(text: '$_id');
+    });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -96,15 +95,59 @@ class _SetInfoPageState extends State<SetInfoPage> {
                     labelText: 'ID',
                     controller: idController,
                     icon: Icon(Icons.card_membership)),
-                
-                RaisedButton(
-                  onPressed: () {
-
-                  },
-                  child: Text('conn'),
-                  color: Colors.green,
-                  textColor: Colors.white,
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: CommonButton(
+                        f: () {
+                          // TODO: save data
+                          print('object');
+                          _addData().whenComplete(() {
+                            alertDialogWithDivider(context, "保存成功!", () {
+                              print('sure');
+                            }, () {
+                              print('cenel');
+                            });
+                          });
+                        },
+                        text: '保存配置',
+                        color: Colors.green,
+                        textColor: Colors.white,
+                        margin: EdgeInsets.only(right: 10),
+                      ),
+                    ),
+                    Expanded(
+                      child: CommonButton(
+                        f: () {
+                          print('object');
+                          alertDialogWithDivider(context, "确定删除配置?", () {
+                            print('sure');
+                            _removeData();
+                          }, () {
+                            print('cenel');
+                          });
+                        },
+                        text: '删除配置',
+                        color: Colors.red,
+                        textColor: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
+                Container(
+                  width: prefix0.window.physicalSize.width,
+                  child: RaisedButton(
+                    onPressed: (){
+                      ConnectMqtt().waitRead();
+                    },
+                    child: Text('连接MQTT服务器'),
+                    color: Colors.blue,
+                    textColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20))
+                    ),
+                  ),
+                )
               ],
             )
           ],
@@ -112,7 +155,7 @@ class _SetInfoPageState extends State<SetInfoPage> {
   }
 
   // 存储数据
-  Future _onClick() async {
+  Future _addData() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     String userName = userNameController.text;
     preferences.setString('userName', userName);
@@ -129,8 +172,6 @@ class _SetInfoPageState extends State<SetInfoPage> {
     String id = idController.text;
     preferences.setString('id', id);
     print('存储id为:$id');
-
-    
   }
 
   Future _removeData() async {
