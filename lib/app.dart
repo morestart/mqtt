@@ -3,7 +3,6 @@ import 'package:mqtt/pages/publish_page.dart';
 import 'package:mqtt/pages/set_info_page.dart';
 import 'package:mqtt/pages/subscribe_page.dart';
 
-
 class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
@@ -25,8 +24,7 @@ class BottomNav extends StatefulWidget {
 }
 
 class _BottomNavState extends State<BottomNav> {
-
-  int _currentIndex=0;
+  int _currentIndex = 0;
 
   final items = [
     BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('服务器')),
@@ -34,24 +32,43 @@ class _BottomNavState extends State<BottomNav> {
     BottomNavigationBarItem(icon: Icon(Icons.publish), title: Text('发布'))
   ];
 
-  final bodyList = [SetInfoPage(), PublishPage(), SubscribePage()];
+  final bodyList = [
+    SetInfoPage(),
+    SubscribePage(),
+    PublishPage(),
+  ];
 
   void onTap(int index) {
     setState(() {
-     _currentIndex = index; 
+      _currentIndex = index;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('MQTTol'),),
+      appBar: AppBar(
+        title: Text('MQTTol'),
+      ),
       body: bodyList[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         items: items,
         currentIndex: _currentIndex,
         onTap: onTap,
       ),
+      // floatingActionButton: _currentIndex == 1
+      //     ? Builder(builder: (BuildContext context) {
+      //         return FloatingActionButton(
+      //           child: Icon(Icons.add),
+      //           onPressed: () {
+      //             SubscribePage().list.add(
+      //               Text('data')
+      //             );
+      //             print('ok');
+      //           },
+      //         );
+      //       })
+      //     : null,
     );
   }
 }

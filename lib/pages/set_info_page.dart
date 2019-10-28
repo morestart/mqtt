@@ -2,11 +2,10 @@ import 'dart:ui' as prefix0;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mqtt/core/util_mqtt.dart';
-import 'package:flutter_custom_dialog/flutter_custom_dialog.dart';
 import 'package:mqtt/widgets/common_button.dart';
 import 'package:mqtt/widgets/common_textfiled.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/util_mqtt.dart';
 import '../widgets/common_dialog.dart';
 import 'dart:ui';
 
@@ -138,7 +137,7 @@ class _SetInfoPageState extends State<SetInfoPage> {
                   width: prefix0.window.physicalSize.width,
                   child: RaisedButton(
                     onPressed: (){
-                      ConnectMqtt().waitRead();
+                      MyMqtt().waitRead();
                     },
                     child: Text('连接MQTT服务器'),
                     color: Colors.blue,

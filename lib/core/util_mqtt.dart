@@ -1,18 +1,17 @@
 import 'dart:io';
-
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'dart:async';
 import 'package:typed_data/typed_buffers.dart';
 
-class Mqtt {
+class MyMqtt {
   String _userName;
   String _password;
   String _ip;
   String _id;
-
-  MqttClient mqttClient;
-  static Mqtt _instance;
+  MqttClient client;
+  MqttConnectionState connectionState;
+  StreamSubscription subscription;
 
   Future readShared() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
@@ -32,85 +31,94 @@ class Mqtt {
 
   void waitRead() {
     readShared().whenComplete(() {
-      Mqtt._();
-      connect();
+      _connect();
     });
   }
 
-  Mqtt._() {
-    mqttClient = MqttClient(_ip, _id);
+  
+  void _connect() async 
+  {
+    client = MqttClient(_ip, _id);
+    client.logging(on: false);
+    client.keepAlivePeriod = 30;
+    client.onDisconnected = _onDisconnected;
+    final MqttConnectMessage connectMessage = MqttConnectMessage()
+          .withClientIdentifier(_id)
+          .startClean()
+          .keepAliveFor(30)
+          .withWillQos(MqttQos.atMostOnce);
+    print('MQTT connecting');
+    client.connectionMessage = connectMessage;
 
-    ///连接成功回调
-    mqttClient.onConnected = _onConnected;
-
-    ///连接断开回调
-    mqttClient.onDisconnected = _onDisconnected;
-
-    ///订阅成功回调
-    mqttClient.onSubscribed = _onSubscribed;
-
-    ///订阅失败回调
-    mqttClient.onSubscribeFail = _onSubscribeFail;
-  }
-
-  static Mqtt getInstance() {
-    if (_instance == null) {
-      _instance = Mqtt._();
+    try
+    {
+      await client.connect(_userName, _password);
+    } catch (e) {
+      print(e);
+      _disconnect();
     }
-    return _instance;
+
+    if (client.connectionState == MqttConnectionState.connected) {
+      print('connected');
+      print(client.connectionStatus);
+      connectionState = client.connectionState;
+    } else {
+      print('[MQTT client] ERROR: MQTT client connection failed - '
+          'disconnecting, state is ${client.connectionState}');
+      _disconnect();
+    }
+
+    subscription = client.updates.listen(_onMessage);
+    
   }
 
-  connect() {
-    mqttClient.connect(_userName, _password);
-    print('连接成功');
-  }
-
-  disconnect()
+  void _subscribeTopic(String topic) 
   {
-    mqttClient.disconnect();
+    if (connectionState == MqttConnectionState.connected)
+    {
+      print('[MQTT client] Subscribing to ${topic.trim()}');
+      client.subscribe(topic, MqttQos.exactlyOnce);
+    }
   }
 
-  publishMessage(String topic, String msg, MqttQos qos) 
-  {
-    ///int数组
-    Uint8Buffer uint8buffer = Uint8Buffer();
-    ///字符串转成int数组 (dart中没有byte) 类似于java的String.getBytes?
-    var codeUnits = msg.codeUnits;
-    //uint8buffer.add()
-    uint8buffer.addAll(codeUnits);
-    mqttClient.publishMessage(topic, qos, uint8buffer);
+ 
+  void _disconnect() {
+    print('[MQTT client] _disconnect()');
+    client.disconnect();
+    _onDisconnected();
   }
 
-  ///消息监听
-  _onData(List<MqttReceivedMessage<MqttMessage>> data) {
-    Uint8Buffer uint8buffer = Uint8Buffer();
-    var messageStream = MqttByteBuffer(uint8buffer);
-    data.forEach((MqttReceivedMessage<MqttMessage> m) {
-      ///将数据写入到messageStream数组中
-      m.payload.writeTo(messageStream);
-      ///打印出来
-      print(uint8buffer.toString());
-    });
+  void _onDisconnected() {
+    print('[MQTT client] _onDisconnected');
+    // setState(() {
+      //topics.clear();
+      connectionState = client.connectionState;
+      client = null;
+      subscription.cancel();
+      subscription = null;
+    // });
+    print('[MQTT client] MQTT client disconnected');
   }
 
-  _onConnected()
-  {
-    // mqttClient.subscribe(topic, qosLevel)
+  void _onMessage(List<MqttReceivedMessage> event) {
+    print(event.length);
+    final MqttPublishMessage recMess =
+    event[0].payload as MqttPublishMessage;
+    final String message =
+    MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+
+    /// The above may seem a little convoluted for users only interested in the
+    /// payload, some users however may be interested in the received publish message,
+    /// lets not constrain ourselves yet until the package has been in the wild
+    /// for a while.
+    /// The payload is a byte buffer, this will be specific to the topic
+    print('[MQTT client] MQTT message: topic is <${event[0].topic}>, '
+        'payload is <-- ${message} -->');
+    print(client.connectionState);
+    print("[MQTT client] message with topic: ${event[0].topic}");
+    print("[MQTT client] message with message: ${message}");
+    // setState(() {
+    //   _temp = double.parse(message);
+    // });
   }
-
-  _onDisconnected()
-  {
-
-  }
-
-  _onSubscribed(String topic) 
-  {
-    mqttClient.updates.listen(_onData);
-  }
-
-  _onSubscribeFail(String topic)
-  {
-
-  }
-
 }
