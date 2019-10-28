@@ -38,7 +38,7 @@ class _SubscribePageState extends State<SubscribePage> {
                   icon: Icon(Icons.cancel),
                 ),
                 leading: prefix0.Image.asset('images/topic.png', width: 24, height: 24, color: Colors.black38,),
-                title: Text('${widget.item[index]}'),
+                title: Text('${widget.item[index]}', style: TextStyle(fontSize: 20),),
                 dense: true,
                 onLongPress: () {},
               );
