@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart' as prefix0;
+import 'package:mqtt/core/util_mqtt.dart';
 import 'package:mqtt/pages/add_subscribe_page.dart';
 
 TextEditingController inputContent = TextEditingController();
@@ -32,6 +33,7 @@ class _SubscribePageState extends State<SubscribePage> {
                     setState(() {
                       // TODO: 取消订阅
                       widget.item.removeAt(index);
+                      // MyMqtt().unSubscribeTopic(widget.item[index]);
                     });
                     print(widget.item);
                   },
@@ -40,7 +42,6 @@ class _SubscribePageState extends State<SubscribePage> {
                 leading: prefix0.Image.asset('images/topic.png', width: 24, height: 24, color: Colors.black38,),
                 title: Text('${widget.item[index]}', style: TextStyle(fontSize: 20),),
                 dense: true,
-                onLongPress: () {},
               );
             },
           ),
@@ -55,6 +56,9 @@ class _SubscribePageState extends State<SubscribePage> {
                   setState(() {
                     widget.item.add(data);
                     // TODO: 添加订阅
+                    for (var i in widget.item) {
+                      MyMqtt().subscribeMsg(i);
+                    }
                     print(widget.item);
                   });
                 });

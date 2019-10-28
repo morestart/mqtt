@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mqtt/pages/publish_page.dart';
+import 'package:mqtt/pages/recv_data_page.dart';
 import 'package:mqtt/pages/set_info_page.dart';
 import 'package:mqtt/pages/subscribe_page.dart';
 
@@ -29,13 +30,15 @@ class _BottomNavState extends State<BottomNav> {
   final items = [
     BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('服务器')),
     BottomNavigationBarItem(icon: Icon(Icons.subscriptions), title: Text('订阅')),
-    BottomNavigationBarItem(icon: Icon(Icons.publish), title: Text('发布'))
+    BottomNavigationBarItem(icon: Icon(Icons.publish), title: Text('发布')),
+    BottomNavigationBarItem(icon: Icon(Icons.message), title: Text('信息'))
   ];
 
   final bodyList = [
     SetInfoPage(),
     SubscribePage(),
     PublishPage(),
+    GetRecvData(),
   ];
 
   void onTap(int index) {
@@ -52,6 +55,7 @@ class _BottomNavState extends State<BottomNav> {
       ),
       body: bodyList[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         items: items,
         currentIndex: _currentIndex,
         onTap: onTap,

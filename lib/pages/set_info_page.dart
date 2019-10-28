@@ -138,6 +138,11 @@ class _SetInfoPageState extends State<SetInfoPage> {
                   child: RaisedButton(
                     onPressed: (){
                       MyMqtt().waitRead();
+                      alertDialogWithDivider(context, "MQTT 连接成功!", () {
+                              print('sure');
+                            }, () {
+                              print('cenel');
+                            });
                     },
                     child: Text('连接MQTT服务器'),
                     color: Colors.blue,
